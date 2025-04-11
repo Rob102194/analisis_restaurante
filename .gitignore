@@ -178,6 +178,3 @@ cython_debug/
 
 # vscode
 .vscode
-
-pendientes.txt
-register.py
