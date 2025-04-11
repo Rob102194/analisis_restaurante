@@ -172,3 +172,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# streamlite secrers
+.streamlit
+
+# vscode
+.vscode
+
+pendientes.txt
+register.py
