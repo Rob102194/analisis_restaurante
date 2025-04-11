@@ -21,7 +21,7 @@ class RegistroUI:
         with st.form("form_compras_gastos"):
             cols = st.columns(2)
             fecha = cols[0].date_input("Fecha", value=datetime.today())
-            categoria = cols[1].selectbox("Categoría", ["Mercancía", "Equipos", "Limpieza", "Servicios", "Otros"])
+            categoria = cols[1].selectbox("Categoría", ["Mercancía", "Equipos", "Nomina", "Servicios", "Otros"])
             
             producto = st.text_input("Producto/Servicio", max_chars=100)
             
