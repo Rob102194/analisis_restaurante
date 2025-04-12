@@ -1,5 +1,6 @@
 streamlit == 1.44.1
 pandas == 2.2.3
 supabase == 2.15.0
+plotly==6.0.1
 streamlit_option_menu
 python-dateutil
