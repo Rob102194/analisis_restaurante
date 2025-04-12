@@ -103,7 +103,7 @@ def mostrar_pagina_analisis():
 def main():
     # Configuración inicial
     configuracion_inicial()
-    #manejar_autenticacion()
+    manejar_autenticacion()
     
     # Inicialización de componentes
     componentes = inicializar_componentes()
