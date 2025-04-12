@@ -55,11 +55,11 @@ class ConsultasComprasGastosUI(BaseEditableUI):
                 df['fecha'] = pd.to_datetime(df['fecha'])
                 
                 df["cantidad"] = df.apply(
-                    lambda x: x["cantidad"] if x["categoria"] == "mercancía" else None, 
+                    lambda x: x["cantidad"] if str(x["categoria"]).lower() == "mercancía" else None, 
                     axis=1
                 )
                 df["unidad_medida"] = df.apply(
-                    lambda x: x["unidad_medida"] if x["categoria"] == "mercancía" else None, 
+                    lambda x: x["unidad_medida"] if str(x["categoria"]).lower() == "mercancía" else None, 
                     axis=1
                 )
 
@@ -73,8 +73,10 @@ class ConsultasComprasGastosUI(BaseEditableUI):
                 st.stop()
             
             if not edited_df.equals(df):    
-                st.session_state.consulta_actual['datos_editados'] = edited_data
-                st.rerun()
+                cambios = edited_df.compare(df)
+                if not cambios.empty:
+                    st.session_state.consulta_actual['datos_editados'] = edited_data
+                    st.rerun()
 
             col1, col2, col3 = st.columns(3)
             with col1:

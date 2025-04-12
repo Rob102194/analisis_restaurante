@@ -8,6 +8,9 @@ from interfaces.registro.regist_comp_gast_ui import RegistroUI
 from modules.logic.cons_compras_gastos_logic import ConsultasComprasGastosLogic
 from interfaces.consultas.cons_compras_gastos_ui import ConsultasComprasGastosUI
 from utils.data_service import DataService
+from modules.logic.precio_ponderado_logic import PrecioPonderadoLogic
+from interfaces.analisis.precio_ponderado_ui import PrecioPonderadoUI
+
 # ======================
 #  CONFIGURACIÓN INICIAL
 # ======================
@@ -57,17 +60,13 @@ def inicializar_componentes():
     return {
         'data_service': data_service,
         'registro_manager': RegistroManager(data_service),
-        'consultas_compras_gastos_logic': ConsultasComprasGastosLogic(data_service)
+        'consultas_compras_gastos_logic': ConsultasComprasGastosLogic(data_service),
+        'precio_ponderado_logic': PrecioPonderadoLogic(data_service)
     }
 
 # ======================
 #  FUNCIONES AUXILIARES
 # ======================
-def mostrar_debug_info(consultas_logic):
-    """Muestra información de depuración en la sidebar"""
-    if st.checkbox("🐞 Modo Debug", key="debug_final"):
-        st.write("### Estado Actual:")
-        st.write("Última Query:", consultas_logic.last_query)
 
 def mostrar_footer():
     """Muestra el pie de página en la sidebar"""
@@ -75,27 +74,6 @@ def mostrar_footer():
     **Usuario:** {st.session_state.user}  
     **Última conexión:** {st.session_state.last_login.strftime("%d/%m/%Y %H:%M")}
     """)
-
-# ======================
-#  VISTAS PRINCIPALES
-# ======================
-
-#def mostrar_pagina_consultas():
-#    """Muestra el módulo de consultas con pestañas"""
-#    tab_ventas, tab_gastos = st.tabs(["💰 Ventas", "📉 Gastos"])
-#    
-#    with tab_ventas:
-#        VentasUI(ConsultasLogic(DatabaseManager())).mostrar_consulta_completa()
-        
-#    with tab_gastos:
-#        GastosUI(ConsultasLogic(DatabaseManager())).mostrar_consulta_completa()
-
-def mostrar_pagina_analisis():
-    """Muestra el dashboard analítico"""
-    st.header("📊 Dashboard Analítico")
-    with st.spinner("Cargando análisis..."):
-        # Lógica de análisis aquí
-        st.info("Módulo en desarrollo")
 
 # ======================
 #  FUNCIÓN PRINCIPAL
@@ -111,17 +89,18 @@ def main():
 
     registro_ui = RegistroUI(componentes['registro_manager'])
     consultas_compras_gastos_ui = ConsultasComprasGastosUI(componentes['consultas_compras_gastos_logic'])
-
+    precio_ponderado_ui = PrecioPonderadoUI(componentes['precio_ponderado_logic'])
+    
     # Elementos de la sidebar
     #with st.sidebar:
-        #mostrar_debug_info(componentes['consultas_logic'])
         #mostrar_footer()
     
     # Sistema de routing
     opciones_menu = {
         "Registro": lambda: registro_ui.mostrar_interfaz(),
-        "Consulta": lambda: consultas_compras_gastos_ui.mostrar_interfaz()
-        #"Análisis": mostrar_pagina_analisis
+        "Consulta": lambda: consultas_compras_gastos_ui.mostrar_interfaz(),
+        #"Análisis": acceder a la ineterfaz de analisis
+        "Precio Ponderado": lambda: precio_ponderado_ui.mostrar_interfaz() #provisional
     }
     
     # Ejecutar vista seleccionada

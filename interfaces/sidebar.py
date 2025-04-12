@@ -8,7 +8,7 @@ class SidebarManager:
         
     def _render(self):
         self.menu_config = {
-            "options": ["Registro", "Consulta", "Análisis"],
+            "options": ["Registro", "Consulta", "Precio Ponderado"],
             "icons": ["cloud-upload", "search", "bar-chart"],
             "styles": {
                 "container": {"padding": "0!important"},
