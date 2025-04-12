@@ -1,11 +1,14 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date
+from datetime import date
 from utils.data_processing import procesar_dataframe_editado
 from utils.validators import ValidadorRegistros
+from utils.error_handler import ErrorHandler
+from interfaces.base_ui import BaseEditableUI
 
-class ConsultasComprasGastosUI:
+class ConsultasComprasGastosUI(BaseEditableUI):
     def __init__(self, consultas_compras_gastos_logic):
+        super().__init__()
         self.logic = consultas_compras_gastos_logic
         self._inicializar_estado()
     
@@ -50,43 +53,17 @@ class ConsultasComprasGastosUI:
             
             if not df.empty and 'fecha' in df.columns:
                 df['fecha'] = pd.to_datetime(df['fecha'])
-            
-            column_config = {
-                "fecha": st.column_config.DateColumn(
-                    "Fecha",
-                    format="YYYY-MM-DD",
-                    default=datetime.today().date()
-                ),
-                "categoria": st.column_config.SelectboxColumn(
-                    "Categoría", 
-                    options=["mercancía", "equipos", "limpieza", "servicios", "otros"]
-                ),
-                "monto": st.column_config.NumberColumn(
-                    "Monto ($)",
-                    format="%.2f",
-                    required=True,  
-                    min_value=0.01 
-                ),
-                "unidad_medida": st.column_config.SelectboxColumn(
-                    "Unidad", 
-                    options=["unidad", "kg", "litros", "paquete"],
-                    required=True
-                ) if 'unidad_medida' in df.columns else None,
-                "cantidad": st.column_config.NumberColumn(
-                    "Cantidad",
-                    format="%.3f",
-                    required=True
-                ) if 'cantidad' in df.columns else None
-            }
-            column_config = {k: v for k, v in column_config.items() if v is not None}
-            
-            edited_df = st.data_editor(
-                df,
-                column_config=column_config,
-                num_rows="dynamic",
-                key="editor_registros",
-                hide_index=True,
-            )
+                
+                df["cantidad"] = df.apply(
+                    lambda x: x["cantidad"] if x["categoria"] == "mercancía" else None, 
+                    axis=1
+                )
+                df["unidad_medida"] = df.apply(
+                    lambda x: x["unidad_medida"] if x["categoria"] == "mercancía" else None, 
+                    axis=1
+                )
+
+            edited_df = self._create_data_editor(df, "consulta")
 
             # Actualizar registros inmediatamente
             try:
@@ -179,24 +156,25 @@ class ConsultasComprasGastosUI:
                 registros_invalidos.append(f"Registro {reg_id}: {str(e)}")
 
         if registros_invalidos:
-            error_msg = ValidadorRegistros.construir_mensaje_error(registros_invalidos, "consulta")
-            st.error(error_msg)
+            ErrorHandler.display_validation_errors(registros_invalidos, "consulta")
             st.stop()
 
         # Actualizar registros modificados
         for cambio in cambios_pendientes:
-            self.logic.db.actualizar_registro(
-                tabla=cambio['tabla'],
-                registro_id=cambio['id'],
-                nuevos_datos=cambio['datos']
+            self.logic.data_service.db.execute_safe_operation(
+                operation='update',
+                table=cambio['tabla'],
+                record_id=cambio['id'],
+                data=cambio['datos']
             )
 
         # Eliminar registros marcados
         if eliminaciones_procesadas:
             for eliminacion in eliminaciones_procesadas:
-                self.logic.db.eliminar_registro(
-                    tabla=eliminacion['tabla'],
-                    registro_id=eliminacion['id']
+                self.logic.data_service.db.execute_safe_operation(
+                    operation='delete',
+                    table=eliminacion['tabla'],
+                    record_id=eliminacion['id']
                 )
             st.success("**¡Registros eliminados exitosamente!** ✅")
             self._reiniciar_busqueda()

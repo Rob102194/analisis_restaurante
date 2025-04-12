@@ -50,7 +50,7 @@ class ValidadorRegistros:
         reg_filtrado = {}
         for campo in campos_permitidos:
             valor = registro.get(campo)
-            if valor is not None:  # <-- Clave!
+            if valor is not None: 
                 reg_filtrado[campo] = valor
         
         return reg_filtrado

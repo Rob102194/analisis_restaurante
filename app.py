@@ -3,11 +3,11 @@ from datetime import datetime
 from auth.auth import login_form
 from modules.database import DatabaseManager
 from interfaces.sidebar import SidebarManager
-from modules.logic.compras_gastos_logic import RegistroManager
-from interfaces.registro.registro_ui import RegistroUI
-from modules.logic.consultas_compras_gastos_logic import ConsultasComprasGastosLogic
-from interfaces.consultas.consultas_compras_gastos_ui import ConsultasComprasGastosUI
-
+from modules.logic.regist_compras_gastos_logic import RegistroManager
+from interfaces.registro.regist_comp_gast_ui import RegistroUI
+from modules.logic.cons_compras_gastos_logic import ConsultasComprasGastosLogic
+from interfaces.consultas.cons_compras_gastos_ui import ConsultasComprasGastosUI
+from utils.data_service import DataService
 # ======================
 #  CONFIGURACIÓN INICIAL
 # ======================
@@ -48,13 +48,16 @@ def inicializar_componentes():
     if 'registros_temporales' not in st.session_state:
         st.session_state.registros_temporales = []
     
-    # Crea la instancia única de DatabaseManager
+    # Crear la instancia única de DatabaseManager
     db = DatabaseManager()
 
+    # Crear servicio de datos
+    data_service = DataService(db)
+
     return {
-        'db':db,
-        'registro_manager': RegistroManager(db),
-        'consultas_compras_gastos_logic': ConsultasComprasGastosLogic(db)
+        'data_service': data_service,
+        'registro_manager': RegistroManager(data_service),
+        'consultas_compras_gastos_logic': ConsultasComprasGastosLogic(data_service)
     }
 
 # ======================
@@ -100,7 +103,7 @@ def mostrar_pagina_analisis():
 def main():
     # Configuración inicial
     configuracion_inicial()
-    manejar_autenticacion()
+    #manejar_autenticacion()
     
     # Inicialización de componentes
     componentes = inicializar_componentes()

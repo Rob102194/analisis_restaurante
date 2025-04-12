@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd
+from utils.error_handler import ErrorHandler
 
 class DatabaseManager:
     _instance = None
@@ -122,7 +123,17 @@ class DatabaseManager:
             st.error(error_msg)
             return False
     
-
+    def execute_safe_operation(self, operation, table, data=None, record_id=None):
+            try:
+                if operation == 'insert':
+                    return self.safe_insert(table, data)
+                elif operation == 'update':
+                    return self.actualizar_registro(table, record_id, data)
+                elif operation == 'delete':
+                    return self.eliminar_registro(table, record_id)
+            except Exception as e:
+                ErrorHandler.handle_db_error(e, f"{operation} en {table}")
+                raise
 
 
 

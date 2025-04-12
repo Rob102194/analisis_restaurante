@@ -1,10 +1,11 @@
 import streamlit as st
 from datetime import datetime, date
 from utils.validators import ValidadorRegistros
+from utils.error_handler import ErrorHandler
 
 class RegistroManager:
-    def __init__(self, db_manager):
-        self.db_manager = db_manager
+    def __init__(self, data_service):
+        self.data_service = data_service
         self._inicializar_registros_temporales()
 
     def _inicializar_registros_temporales(self):
@@ -38,7 +39,7 @@ class RegistroManager:
             raise ValueError("El campo 'monto' no puede estar vacío")  # <-- Nueva línea
         
         monto = float(datos_raw['monto'])
-        if monto <= 0:
+        if not monto or monto <= 0:
             raise ValueError("💰 Monto debe ser > 0")
        
         # Validación obligatoria para mercancía
@@ -54,17 +55,16 @@ class RegistroManager:
             'categoria': datos_raw['categoria'].lower().strip(),
             'producto': datos_raw['producto'].strip(),
             'monto': float(datos_raw['monto']),
-            'cantidad': datos_raw.get('cantidad'),
+            'cantidad': float(datos_raw['cantidad']),
             'unidad_medida': datos_raw.get('unidad_medida'),
             'proveedor': datos_raw.get('proveedor'),
             'descripcion': datos_raw.get('descripcion')
         }
         
-        # No eliminar campos, solo asignar None si no aplican
         if datos['categoria'] != 'mercancía':
-            datos['cantidad'] = None
-            datos['unidad_medida'] = None
-        
+            datos.pop('cantidad', None) 
+            datos.pop('unidad_medida', None)
+
         return datos
 
     def _normalizar_fecha(self, fecha):
@@ -112,12 +112,12 @@ class RegistroManager:
         
         # Manejo de errores
         if registros_invalidos:
-            error_msg = ValidadorRegistros.construir_mensaje_error(registros_invalidos)
-            st.error(error_msg)
+            ErrorHandler.display_validation_errors(registros_invalidos, "registro")
             st.stop()
         
         # Insertar en DB
         for tabla, datos in registros_procesados:
-            self.db_manager.safe_insert(tabla, datos)
+            tipo = "mercancía" if tabla == "compras" else "gastos"
+            self.data_service.guardar_registro(tipo, datos)
         
         st.session_state.registros_temporales = []

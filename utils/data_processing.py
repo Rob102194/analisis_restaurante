@@ -1,19 +1,21 @@
 import pandas as pd
-from datetime import datetime
+from utils.error_handler import ErrorHandler
+
+def validate_mercancia_fields(registro):
+    if registro.get('categoria') == 'mercancía':
+        errors = []
+        if not registro.get('cantidad'):
+            errors.append("Cantidad es obligatoria para mercancía")
+        if not registro.get('unidad_medida'):
+            errors.append("Unidad de medida es obligatoria para mercancía")
+        return errors
+    return []
 
 def procesar_dataframe_editado(edited_df: pd.DataFrame) -> list[dict]:
     edited_data = edited_df.replace({pd.NA: None}).to_dict('records')
     
     for registro in edited_data:
         try:
-            # Validación básica para mercancía
-            if registro.get('categoria') == 'mercancía':
-                if registro.get('cantidad') is None:
-                    raise ValueError("Cantidad es obligatoria para mercancía")
-                if registro.get('unidad_medida') is None:
-                    raise ValueError("Unidad de medida es obligatoria para mercancía")
-            
-            # Resto del procesamiento
             if 'fecha' in registro:
                 registro['fecha'] = pd.to_datetime(registro['fecha']).strftime("%Y-%m-%d")
             
@@ -22,12 +24,10 @@ def procesar_dataframe_editado(edited_df: pd.DataFrame) -> list[dict]:
                 raise ValueError("El campo 'monto' no puede estar vacío")
             registro['monto'] = float(monto)  # Conversión después de validar
 
-            # Para cantidad (solo mercancía)
-            if registro.get('categoria') == 'mercancía':
-                cantidad = registro.get('cantidad')
-                if cantidad is None or (isinstance(cantidad, str) and cantidad.strip() == ''):
-                    raise ValueError("Cantidad es obligatoria para mercancía")
-                registro['cantidad'] = float(cantidad)
+            # Para mercancías
+            mercancia_errors = validate_mercancia_fields(registro)
+            if mercancia_errors:
+                raise ValueError("\n".join(mercancia_errors))
         
         except ValueError as e:
             identificador = (
@@ -35,7 +35,10 @@ def procesar_dataframe_editado(edited_df: pd.DataFrame) -> list[dict]:
                 f"Fecha: {registro.get('fecha', 'N/A')} | "
                 f"Categoría: {registro.get('categoria', 'N/A')}"
             )
-            raise ValueError(f"Error en registro [{identificador}]: {str(e)}")
+            ErrorHandler.display_validation_errors(
+                errors=[str(e)], 
+                context=f"procesamiento de datos - {identificador}"
+            )
     
     return edited_data
 
